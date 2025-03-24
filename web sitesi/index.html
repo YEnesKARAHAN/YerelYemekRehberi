@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yerel Yemek Rehberi</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">Yerel Yemek Rehberi</div>
+            <ul class="nav-links">
+                <li><a href="#anasayfa">Ana Sayfa</a></li>
+                <li><a href="#restoranlar">Restoranlar</a></li>
+                <li><a href="#hakkimizda">Hakkımızda</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>En İyi Yerel Lezzetleri Keşfedin</h1>
+            <p>Şehrinizin en iyi restoranlarını ve yerel lezzetlerini keşfedin</p>
+            <a href="#restoranlar" class="btn">Restoranları Keşfet</a>
+        </div>
+    </header>
+
+    <section id="restoranlar" class="restaurants">
+        <div class="container">
+            <h2>Popüler Restoranlar</h2>
+            <div class="restaurant-grid">
+                <div class="restaurant-card">
+                    <img src="https://via.placeholder.com/300x200" alt="Restoran 1">
+                    <h3>Lezzet Durağı</h3>
+                    <p>Geleneksel Türk mutfağının en iyi örnekleri</p>
+                    <div class="rating">⭐ 4.8</div>
+                </div>
+                <div class="restaurant-card">
+                    <img src="https://via.placeholder.com/300x200" alt="Restoran 2">
+                    <h3>Deniz Mahsulleri</h3>
+                    <p>Taze deniz ürünleri ve özel soslar</p>
+                    <div class="rating">⭐ 4.6</div>
+                </div>
+                <div class="restaurant-card">
+                    <img src="https://via.placeholder.com/300x200" alt="Restoran 3">
+                    <h3>Kebap Evi</h3>
+                    <p>En iyi et ve kebap çeşitleri</p>
+                    <div class="rating">⭐ 4.9</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="hakkimizda" class="about">
+        <div class="container">
+            <h2>Hakkımızda</h2>
+            <p>Yerel Yemek Rehberi olarak amacımız, şehrinizdeki en iyi restoranları ve yerel lezzetleri sizlerle buluşturmaktır. Deneyimli ekibimiz, sürekli güncellenen listemiz ve kullanıcı yorumlarıyla size en iyi yemek deneyimini sunuyoruz.</p>
+        </div>
+    </section>
+
+    <div class="chatbot-button">
+        <button class="chat-btn" onclick="toggleChat()">
+            <span class="chat-icon">💬</span>
+            <span class="chat-text">Yemek Asistanı</span>
+        </button>
+    </div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <h3>Yemek Asistanı</h3>
+            <button class="close-btn" onclick="toggleChat()">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                Merhaba! Size nasıl yardımcı olabilirim? Restoran önerileri veya yemek tarifleri hakkında bilgi almak ister misiniz?
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın...">
+            <button onclick="sendMessage()">Gönder</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Yerel Yemek Rehberi. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.classList.toggle('active');
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            if (userInput.value.trim() !== '') {
+                // Kullanıcı mesajını ekle
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user';
+                userMessage.textContent = userInput.value;
+                chatMessages.appendChild(userMessage);
+
+                // Bot yanıtını ekle (örnek)
+                setTimeout(() => {
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot';
+                    botMessage.textContent = 'Size yardımcı olmaktan mutluluk duyarım! Başka bir sorunuz var mı?';
+                    chatMessages.appendChild(botMessage);
+                }, 1000);
+
+                userInput.value = '';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Enter tuşu ile mesaj gönderme
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html> 
