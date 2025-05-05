@@ -2,12 +2,35 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
+// Sabit kategoriler ve restoranlar
+const CATEGORIES = [
+  { id: 1, name: 'Restoranlar', icon: 'restaurant' },
+  { id: 2, name: 'Kafeler', icon: 'local-cafe' },
+  { id: 3, name: 'Fast Food', icon: 'local-pizza' },
+  { id: 4, name: 'Barlar', icon: 'local-bar' },
+];
+
+const RESTAURANTS = [
+  { id: 1, name: 'Lezzet Durağı', description: 'Geleneksel Türk mutfağı', image_url: 'https://via.placeholder.com/300x150', rating: 4.8, category_id: 1 },
+  { id: 2, name: 'Kahve Diyarı', description: 'En iyi kahveler', image_url: 'https://via.placeholder.com/300x150', rating: 4.5, category_id: 2 },
+  { id: 3, name: 'Burger House', description: 'Lezzetli burgerler', image_url: 'https://via.placeholder.com/300x150', rating: 4.2, category_id: 3 },
+  { id: 4, name: 'Bar 34', description: 'Canlı müzik ve içecekler', image_url: 'https://via.placeholder.com/300x150', rating: 4.0, category_id: 4 },
+  { id: 5, name: 'Anadolu Sofrası', description: 'Ev yemekleri', image_url: 'https://via.placeholder.com/300x150', rating: 4.7, category_id: 1 },
+  { id: 6, name: 'Cafe Latte', description: 'Tatlılar ve kahve', image_url: 'https://via.placeholder.com/300x150', rating: 4.3, category_id: 2 },
+];
+
 const HomeScreen = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState([
     { id: 1, text: 'Merhaba! Size nasıl yardımcı olabilirim? Restoran önerileri veya yemek tarifleri hakkında bilgi almak ister misiniz?', isBot: true }
   ]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Seçili kategoriye göre restoranları filtrele
+  const filteredRestaurants = selectedCategory
+    ? RESTAURANTS.filter(r => r.category_id === selectedCategory)
+    : RESTAURANTS;
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
@@ -23,15 +46,43 @@ const HomeScreen = () => {
       setChatMessages([...chatMessages, newMessage]);
       setMessage('');
 
-      // Bot yanıtı
-      setTimeout(() => {
-        const botResponse = {
-          id: chatMessages.length + 2,
-          text: 'Size yardımcı olmaktan mutluluk duyarım! Başka bir sorunuz var mı?',
-          isBot: true
-        };
-        setChatMessages(prev => [...prev, botResponse]);
-      }, 1000);
+      // API'ye istek at
+      fetch(
+        "http://127.0.0.1:7860/api/v1/run/c6928091-7ed3-4049-af8c-67f62e796365?stream=false",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            input_value: message,
+            output_type: "chat",
+            input_type: "chat",
+            tweaks: {
+              "ChatInput-nEhcE": {},
+              "ChatOutput-yxQjN": {},
+              "Agent-uQhSf": {}
+            }
+          }),
+        }
+      )
+        .then(res => res.json())
+        .then(data => {
+          const botResponse = {
+            id: chatMessages.length + 2,
+            text: data.output || "Bot'tan cevap alınamadı.",
+            isBot: true
+          };
+          setChatMessages(prev => [...prev, botResponse]);
+        })
+        .catch(error => {
+          const botResponse = {
+            id: chatMessages.length + 2,
+            text: "Bot ile bağlantı kurulamadı.",
+            isBot: true
+          };
+          setChatMessages(prev => [...prev, botResponse]);
+        });
     }
   };
 
@@ -52,43 +103,46 @@ const HomeScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Öne Çıkan Kategoriler</Text>
           <View style={styles.categoryGrid}>
-            <TouchableOpacity style={styles.categoryCard}>
-              <MaterialIcons name="restaurant" size={40} color="#FF6B6B" />
-              <Text style={styles.categoryText}>Restoranlar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.categoryCard}>
-              <MaterialIcons name="local-cafe" size={40} color="#FF6B6B" />
-              <Text style={styles.categoryText}>Kafeler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.categoryCard}>
-              <MaterialIcons name="local-pizza" size={40} color="#FF6B6B" />
-              <Text style={styles.categoryText}>Fast Food</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.categoryCard}>
-              <MaterialIcons name="local-bar" size={40} color="#FF6B6B" />
-              <Text style={styles.categoryText}>Barlar</Text>
-            </TouchableOpacity>
+            {CATEGORIES.map(cat => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.categoryCard, selectedCategory === cat.id && { borderColor: '#FF6B6B', borderWidth: 2 }]}
+                onPress={() => setSelectedCategory(cat.id)}
+              >
+                <MaterialIcons name={cat.icon} size={40} color="#FF6B6B" />
+                <Text style={styles.categoryText}>{cat.name}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
-        {/* Popüler Restoranlar */}
+        {/* Restoranlar */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Popüler Restoranlar</Text>
+          <Text style={styles.sectionTitle}>
+            {selectedCategory
+              ? CATEGORIES.find(c => c.id === selectedCategory)?.name + ' Listesi'
+              : 'Tüm Restoranlar'}
+          </Text>
           <View style={styles.restaurantList}>
-            <TouchableOpacity style={styles.restaurantCard}>
-              <Image
-                source={{ uri: 'https://via.placeholder.com/300x150' }}
-                style={styles.restaurantImage}
-              />
-              <View style={styles.restaurantInfo}>
-                <Text style={styles.restaurantName}>Lezzet Durağı</Text>
-                <Text style={styles.restaurantDesc}>Geleneksel Türk mutfağının en iyi örnekleri</Text>
-                <View style={styles.ratingContainer}>
-                  <MaterialIcons name="star" size={16} color="#FFD700" />
-                  <Text style={styles.rating}>4.8</Text>
+            {filteredRestaurants.map(rest => (
+              <TouchableOpacity key={rest.id} style={styles.restaurantCard}>
+                <Image
+                  source={{ uri: rest.image_url }}
+                  style={styles.restaurantImage}
+                />
+                <View style={styles.restaurantInfo}>
+                  <Text style={styles.restaurantName}>{rest.name}</Text>
+                  <Text style={styles.restaurantDesc}>{rest.description}</Text>
+                  <View style={styles.ratingContainer}>
+                    <MaterialIcons name="star" size={16} color="#FFD700" />
+                    <Text style={styles.rating}>{rest.rating}</Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            ))}
+            {filteredRestaurants.length === 0 && (
+              <Text style={{ color: '#666', textAlign: 'center', marginTop: 20 }}>Bu kategoriye ait mekan bulunamadı.</Text>
+            )}
           </View>
         </View>
       </ScrollView>
