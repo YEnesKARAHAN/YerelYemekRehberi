@@ -11,12 +11,12 @@ const CATEGORIES = [
 ];
 
 const RESTAURANTS = [
-  { id: 1, name: 'Lezzet Durağı', description: 'Geleneksel Türk mutfağı', image_url: 'https://via.placeholder.com/300x150', rating: 4.8, category_id: 1 },
-  { id: 2, name: 'Kahve Diyarı', description: 'En iyi kahveler', image_url: 'https://via.placeholder.com/300x150', rating: 4.5, category_id: 2 },
-  { id: 3, name: 'Burger House', description: 'Lezzetli burgerler', image_url: 'https://via.placeholder.com/300x150', rating: 4.2, category_id: 3 },
-  { id: 4, name: 'Bar 34', description: 'Canlı müzik ve içecekler', image_url: 'https://via.placeholder.com/300x150', rating: 4.0, category_id: 4 },
-  { id: 5, name: 'Anadolu Sofrası', description: 'Ev yemekleri', image_url: 'https://via.placeholder.com/300x150', rating: 4.7, category_id: 1 },
-  { id: 6, name: 'Cafe Latte', description: 'Tatlılar ve kahve', image_url: 'https://via.placeholder.com/300x150', rating: 4.3, category_id: 2 },
+  { id: 1, name: 'Lezzet Durağı', description: 'Geleneksel Türk mutfağı', image_url: 'https://via.placeholder.com/300x150', rating: 4.8, category_id: 1, city: 'İstanbul' },
+  { id: 2, name: 'Kahve Diyarı', description: 'En iyi kahveler', image_url: 'https://via.placeholder.com/300x150', rating: 4.5, category_id: 2, city: 'Ankara' },
+  { id: 3, name: 'Burger House', description: 'Lezzetli burgerler', image_url: 'https://via.placeholder.com/300x150', rating: 4.2, category_id: 3, city: 'İzmir' },
+  { id: 4, name: 'Bar 34', description: 'Canlı müzik ve içecekler', image_url: 'https://via.placeholder.com/300x150', rating: 4.0, category_id: 4, city: 'İstanbul' },
+  { id: 5, name: 'Anadolu Sofrası', description: 'Ev yemekleri', image_url: 'https://via.placeholder.com/300x150', rating: 4.7, category_id: 1, city: 'Ankara' },
+  { id: 6, name: 'Cafe Latte', description: 'Tatlılar ve kahve', image_url: 'https://via.placeholder.com/300x150', rating: 4.3, category_id: 2, city: 'İzmir' },
 ];
 
 const HomeScreen = () => {
@@ -26,11 +26,17 @@ const HomeScreen = () => {
     { id: 1, text: 'Merhaba! Size nasıl yardımcı olabilirim? Restoran önerileri veya yemek tarifleri hakkında bilgi almak ister misiniz?', isBot: true }
   ]);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
 
-  // Seçili kategoriye göre restoranları filtrele
-  const filteredRestaurants = selectedCategory
-    ? RESTAURANTS.filter(r => r.category_id === selectedCategory)
-    : RESTAURANTS;
+  // Seçili kategoriye ve arama sorgusuna göre restoranları filtrele
+  const filteredRestaurants = RESTAURANTS.filter(r => {
+    const matchesCategory = !selectedCategory || r.category_id === selectedCategory;
+    const matchesSearch = !searchQuery || 
+      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.city.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
@@ -86,6 +92,13 @@ const HomeScreen = () => {
     }
   };
 
+  const askAI = (restaurant) => {
+    setSelectedRestaurant(restaurant);
+    const question = `${restaurant.name} hakkında bilgi verir misin?`;
+    setMessage(question);
+    sendMessage();
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -97,6 +110,17 @@ const HomeScreen = () => {
           />
           <Text style={styles.heroTitle}>En İyi Yerel Lezzetleri Keşfedin</Text>
           <Text style={styles.heroSubtitle}>Şehrinizin en iyi restoranlarını ve yerel lezzetlerini keşfedin</Text>
+        </View>
+
+        {/* Arama Çubuğu */}
+        <View style={styles.searchContainer}>
+          <MaterialIcons name="search" size={24} color="#666" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Şehir veya restoran ara..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
         </View>
 
         {/* Öne Çıkan Kategoriler */}
@@ -133,15 +157,23 @@ const HomeScreen = () => {
                 <View style={styles.restaurantInfo}>
                   <Text style={styles.restaurantName}>{rest.name}</Text>
                   <Text style={styles.restaurantDesc}>{rest.description}</Text>
+                  <Text style={styles.restaurantCity}>{rest.city}</Text>
                   <View style={styles.ratingContainer}>
                     <MaterialIcons name="star" size={16} color="#FFD700" />
                     <Text style={styles.rating}>{rest.rating}</Text>
                   </View>
+                  <TouchableOpacity 
+                    style={styles.aiButton}
+                    onPress={() => askAI(rest)}
+                  >
+                    <MaterialIcons name="smart-toy" size={20} color="white" />
+                    <Text style={styles.aiButtonText}>Yapay Zekaya Sor</Text>
+                  </TouchableOpacity>
                 </View>
               </TouchableOpacity>
             ))}
             {filteredRestaurants.length === 0 && (
-              <Text style={{ color: '#666', textAlign: 'center', marginTop: 20 }}>Bu kategoriye ait mekan bulunamadı.</Text>
+              <Text style={{ color: '#666', textAlign: 'center', marginTop: 20 }}>Arama kriterlerinize uygun mekan bulunamadı.</Text>
             )}
           </View>
         </View>
@@ -378,6 +410,40 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    margin: 20,
+    padding: 10,
+    borderRadius: 10,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  restaurantCity: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  aiButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4A90E2',
+    padding: 8,
+    borderRadius: 5,
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  aiButtonText: {
+    color: 'white',
+    marginLeft: 5,
+    fontSize: 14,
   },
 });
 
