@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, FlatList, Image, TouchableOpacity, ActivityIndi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://192.168.1.1:5000/api';
 
 export default function HomeScreen() {
   const [restaurants, setRestaurants] = useState([]);

@@ -1,9 +1,52 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+
+const API_URL = 'http://192.168.1.1:5000/api';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const validateForm = () => {
+    if (!email || !password) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      return false;
+    }
+    if (!email.includes('@')) {
+      Alert.alert('Hata', 'Geçerli bir e-posta adresi girin');
+      return false;
+    }
+    return true;
+  };
+
+  const handleLogin = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Başarılı giriş
+        navigation.replace('Home');
+      } else {
+        Alert.alert('Hata', data.message || 'Giriş başarısız');
+      }
+    } catch (error) {
+      Alert.alert('Hata', 'Sunucuya bağlanırken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -20,6 +63,7 @@ const LoginScreen = ({ navigation }) => {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        editable={!loading}
       />
       <TextInput
         style={styles.input}
@@ -28,13 +72,23 @@ const LoginScreen = ({ navigation }) => {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        editable={!loading}
       />
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Giriş Yap</Text>
+      <TouchableOpacity 
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+        </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('Register')}
+        disabled={loading}
+      >
         <Text style={styles.switchText}>Hesabınız yok mu? Kayıt Ol</Text>
       </TouchableOpacity>
     </View>
@@ -86,6 +140,9 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     marginTop: 10,
     textDecorationLine: 'underline',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
 

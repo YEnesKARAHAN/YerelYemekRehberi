@@ -1,10 +1,61 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+
+const API_URL = 'http://192.168.1.1:5000/api';
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const validateForm = () => {
+    if (!name || !email || !password) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      return false;
+    }
+    if (!email.includes('@')) {
+      Alert.alert('Hata', 'Geçerli bir e-posta adresi girin');
+      return false;
+    }
+    if (password.length < 6) {
+      Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır');
+      return false;
+    }
+    return true;
+  };
+
+  const handleRegister = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Başarılı', 'Kayıt işlemi tamamlandı', [
+          {
+            text: 'Tamam',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ]);
+      } else {
+        Alert.alert('Hata', data.message || 'Kayıt başarısız');
+      }
+    } catch (error) {
+      Alert.alert('Hata', 'Sunucuya bağlanırken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -20,6 +71,7 @@ const RegisterScreen = ({ navigation }) => {
         placeholderTextColor="#999"
         value={name}
         onChangeText={setName}
+        editable={!loading}
       />
       <TextInput
         style={styles.input}
@@ -28,6 +80,7 @@ const RegisterScreen = ({ navigation }) => {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        editable={!loading}
       />
       <TextInput
         style={styles.input}
@@ -36,13 +89,23 @@ const RegisterScreen = ({ navigation }) => {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        editable={!loading}
       />
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Kayıt Ol</Text>
+      <TouchableOpacity 
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Kayıt Yapılıyor...' : 'Kayıt Ol'}
+        </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.goBack()}>
+      <TouchableOpacity 
+        onPress={() => navigation.goBack()}
+        disabled={loading}
+      >
         <Text style={styles.switchText}>Zaten bir hesabınız var mı? Giriş Yap</Text>
       </TouchableOpacity>
     </View>
@@ -94,6 +157,9 @@ const styles = StyleSheet.create({
     color: '#FF6B6B',
     marginTop: 10,
     textDecorationLine: 'underline',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
 
